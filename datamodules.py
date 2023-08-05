@@ -10,8 +10,7 @@ from utils import load_image
 import os
 import glob
 
-# [batch, 254, ch, H, W]
-
+# [batch, max_slices, ch, H, W], orginal no of slices before padding = []
 class RSNAdataset(Dataset):
     def __init__(self, patient_path, paths, targets, n_slices, img_size, transform=None):
         #(self, './data/reduced_dataset/', t['xtrain'],t['ytrain'], 254, 112, transform)
@@ -25,96 +24,45 @@ class RSNAdataset(Dataset):
     def __len__(self):
         return len(self.paths)
     
-    def padding(self, paths):
+    def padding(self, paths): 
         images=[load_image(path) for path in paths]
-
+        org_size = len(images)
+            
         dup_len = 254 - len(images)
-        dup = images[-1]
+        if org_size == 0:
+            dup = torch.zeros(self.n_slices, 112, 112)
+        else:
+            dup = images[-1]
         for i in range(dup_len):
             images.append(dup)
 
         images = [torch.tensor(image, dtype=torch.float32) for image in images]
+        images = torch.stack(images)
 
-        if len(images)==0:
-            images = torch.zeros(self.n_slices, 112, 112)
-        else:
-            images = torch.stack(images)
-
-        return images
+        return images, org_size
     
     def __getitem__(self, index):
         _id = self.paths[index]
         patient_path = os.path.join(self.patient_path, f'{str(_id).zfill(5)}/')
 
         data = []
+        org = []
         for t in ["FLAIR", "T1w", "T1wCE", "T2w"]:
             t_paths = sorted(
                 glob.glob(os.path.join(patient_path, t, "*")), 
                 key=lambda x: int(x[:-4].split("-")[-1]),
             )
             num_samples = self.n_slices
-            ##if len(t_paths) < num_samples:
-             #   in_frames_path = t_paths
-            #else:
-             #   in_frames_path = uniform_temporal_subsample(t_paths, num_samples)
-            
-            image = self.padding(t_paths)
-            if image.shape[0] == 0:
-                image = torch.zeros(num_samples, 112, 112)
+            image, org_size = self.padding(t_paths)
+
             data.append(image)
+            org.append(org_size)
             break
             
         data = torch.stack(data).transpose(0,1)
-        y = torch.tensor(self.targets[index], dtype=torch.float)
-        return {"X": data.float(), "y": y}
-
-class TestDataRetriever(Dataset):
-    def __init__(self, patient_path, paths, targets, n_frames, img_size, transform=None):
-        self.patient_path = patient_path
-        self.paths = paths
-        self.targets = targets
-        self.n_frames = n_frames
-        self.img_size = img_size
-          
-    def __len__(self):
-        return len(self.paths)
-    
-    def read_video(self, vid_paths):
+        y = torch.tensor(self.targets[index], dtype=torch.float32)
         
-        video = [load_image(path, (self.img_size, self.img_size)) for path in vid_paths]
-        
-        video = [torch.tensor(frame, dtype=torch.float32) for frame in video]
-        if len(video)==0:
-            video = torch.zeros(self.n_frames, self.img_size, self.img_size)
-        else:
-            video = torch.stack(video) # T * C * H * W
-        return video
-    
-    def __getitem__(self, index):
-        _id = self.paths[index]
-        patient_path = os.path.join(self.patient_path, f'{str(_id).zfill(5)}/')
-        channels = []
-        for t in ["FLAIR","T1w", "T1wCE", "T2w"]:
-            t_paths = sorted(
-                glob.glob(os.path.join(patient_path, t, "*")), 
-                key=lambda x: int(x[:-4].split("-")[-1]),
-            )
-            num_samples = self.n_frames
-            if len(t_paths) < num_samples:
-                in_frames_path = t_paths
-            else:
-                in_frames_path = uniform_temporal_subsample(t_paths, num_samples)
-            
-            channel = self.read_video(in_frames_path)
-            if channel.shape[0] == 0:
-                print("1 channel empty")
-                channel = torch.zeros(num_samples, self.img_size, self.img_size)
-            channels.append(channel)
-        
-        channels = torch.stack(channels).transpose(0,1)
-        y = torch.tensor(self.targets[index], dtype=torch.float)
-        return {"X": channels.float(), "y": y}
-
+        return {"X": data.float(), "y": y}, org
 
 
 
