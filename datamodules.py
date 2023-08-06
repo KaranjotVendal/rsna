@@ -62,7 +62,7 @@ class RSNAdataset(Dataset):
         data = torch.stack(data).transpose(0,1)
         y = torch.tensor(self.targets[index], dtype=torch.float32)
         
-        return {"X": data.float(), "y": y}, org
+        return {"X": data.float(), "y": y, 'org': org}
 
 
 
