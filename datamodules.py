@@ -30,7 +30,7 @@ class RSNAdataset(Dataset):
             
         dup_len = 254 - len(images)
         if org_size == 0:
-            dup = torch.zeros(self.n_slices, 112, 112)
+            dup = torch.zeros(1, 112, 112)
         else:
             dup = images[-1]
         for i in range(dup_len):
@@ -97,96 +97,3 @@ class RSNAdataset(Dataset):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class MnistDataModule(L.LightningDataModule):
-    def __init__(self, data_path="./", batch_size=64, num_workers=0, height_width=(28,28)):
-        super().__init__()
-        self.batch_size = batch_size
-        self.data_path = data_path
-        self.height_width = height_width
-        self.num_workers = num_workers
-
-    def prepare_data(self):
-        datasets.MNIST(root=self.data_path, download=True)
-        self.train_transform = transforms.Compose(
-            [
-                transforms.Resize(self.height_width),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5), (0.5))
-            ]
-        )
-
-        self.test_transform = transforms.Compose(
-            [
-                transforms.Resize(self.height_width),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5), (0.5))
-            ]
-        )
-        return
-
-    def setup(self, stage=None):
-        # Note transforms.ToTensor() scales input images
-        # to 0-1 range
-        train = datasets.MNIST(
-            root=self.data_path,
-            train=True,
-            transform=self.train_transform,
-            download=False,
-        )
-
-        self.test = datasets.MNIST(
-            root=self.data_path,
-            train=False,
-            transform=self.test_transform,
-            download=False,
-        )
-
-        self.train, self.valid = random_split(train, lengths=[55000, 5000])
-
-    def train_dataloader(self):
-        train_loader = DataLoader(
-            dataset=self.train,
-            batch_size=self.batch_size,
-            drop_last=True,
-            shuffle=True,
-            num_workers=self.num_workers,
-        )
-        return train_loader
-
-    def val_dataloader(self):
-        valid_loader = DataLoader(
-            dataset=self.valid,
-            batch_size=self.batch_size,
-            drop_last=False,
-            shuffle=False,
-            num_workers=self.num_workers,
-        )
-        return valid_loader
-
-    def test_dataloader(self):
-        test_loader = DataLoader(
-            dataset=self.test,
-            batch_size=self.batch_size,
-            drop_last=False,
-            shuffle=False,
-            num_workers=self.num_workers,
-        )
-        return test_loader
