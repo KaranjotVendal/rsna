@@ -1,14 +1,14 @@
+import os
+import glob
+
 import torch
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset
-from torch.utils.data import random_split
-import lightning as L
 
 from utils import load_image
 
-import os
-import glob
+
+
 
 # [batch, max_slices, ch, H, W], orginal no of slices before padding = []
 class RSNAdataset(Dataset):
@@ -60,7 +60,7 @@ class RSNAdataset(Dataset):
             break
             
         data = torch.stack(data).transpose(0,1)
-        y = torch.tensor(self.targets[index], dtype=torch.float32)
+        y = torch.tensor(self.targets[index])
         
         return {"X": data.float(), "y": y, 'org': org}
 
