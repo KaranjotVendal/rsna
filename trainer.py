@@ -25,7 +25,8 @@ class Trainer():
         self.criterion = criterion
         self.loss_meter = loss_meter
         self.fold = fold
-        self.hist = {'test_acc':[],
+        self.hist = {'test_loss':[],
+                     'test_acc':[],
                      'test_f1':[],
                      'test_auroc':[],
                      'train_loss':[],
@@ -61,7 +62,7 @@ class Trainer():
             train_f1 = torchmetrics.F1Score(task="multiclass", num_classes=2, average='macro').to(self.device)
             train_auroc = torchmetrics.AUROC(task="multiclass", num_classes=2).to(self.device)
             
-            for idx, batch in enumerate(tqdm(train_loader)):
+            for idx, batch in enumerate(train_loader):
                 print('-'*50)
                 features = batch['X'].to(self.device)
                 targets = batch['y'].to(self.device)
@@ -87,6 +88,12 @@ class Trainer():
             _acc = train_acc.compute()
             _f1 = train_f1.compute()
             _roc = train_auroc.compute()
+
+            wandb.log({'train loss': _loss,
+                      'train acc': _acc,
+                      'train f1_score': _f1,
+                      'train AUROC': _roc
+                     })
 
             train_acc.reset()
             train_f1.reset()
@@ -140,7 +147,13 @@ class Trainer():
             _loss = test_loss.avg
             _acc = test_acc.compute()
             _f1 = test_f1.compute()
-            _roc = test_auroc.compute()  
+            _roc = test_auroc.compute()
+
+            wandb.log({'test loss': _loss,
+                      'test acc': _acc,
+                      'test f1_score': _f1,
+                      'test AUROC': _roc
+                     })
     
             test_acc.reset()
             test_f1.reset()
