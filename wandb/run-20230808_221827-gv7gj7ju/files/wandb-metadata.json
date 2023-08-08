@@ -1,0 +1,124 @@
+{
+    "os": "Linux-5.15.90.1-microsoft-standard-WSL2-x86_64-with-glibc2.31",
+    "python": "3.11.4",
+    "heartbeatAt": "2023-08-08T21:18:28.225473",
+    "startedAt": "2023-08-08T21:18:27.633360",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "CNN_RNN.ipynb",
+    "root": "/home/karanjotvendal/karanjot/thesis/RSNA/4 Task custom architecture",
+    "git": {
+        "remote": "https://github.com/KaranjotVendal/rsna.git",
+        "commit": "61c848fab3227b2d2efe03c7908338c6d606e755"
+    },
+    "email": "karanjotvendal@gmail.com",
+    "host": "LAPTOP-3AN601UJ",
+    "username": "karanjotvendal",
+    "executable": "/home/karanjotvendal/miniforge3/envs/thesis/bin/python3.11",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 3194.0069999999996,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3194.007,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "total": 1006.853931427002,
+        "used": 112.89738082885742
+    },
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+            "memory_total": 6442450944
+        }
+    ],
+    "memory": {
+        "total": 7.385036468505859
+    }
+}

@@ -20,30 +20,29 @@ import wandb
 def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers, device):
     
     fold_acc = []
-    fold_loss = []
     fold_auroc = []
     fold_f1 = []
-
+    
     start_time = time.time()
     model = RACNet(MODEL, num_classes)
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = F.cross_entropy
-        
+
+    folds_xtrain = np.load('./data/folds/new_folds/xtrain.npy', allow_pickle=True)
+    folds_xtest = np.load('./data/folds/new_folds/xtest.npy', allow_pickle=True)
+    folds_ytrain = np.load('./data/folds/new_folds/ytrain.npy', allow_pickle=True)
+    folds_ytest = np.load('./data/folds/new_folds/ytest.npy', allow_pickle=True)
+    
+    
     for _ in range(n_fold):
         fold = _+1
-        folds_xtrain = np.load('./data/folds/new_folds/xtrain.npy', allow_pickle=True)
-        folds_xtest = np.load('./data/folds/new_folds/xtest.npy', allow_pickle=True)
-        folds_ytrain = np.load('./data/folds/new_folds/ytrain.npy', allow_pickle=True)
-        folds_ytest = np.load('./data/folds/new_folds/ytest.npy', allow_pickle=True)
+        print(f'--------------FOLD:{fold}-----------------------') 
         
         xtrain = folds_xtrain[_]
         ytrain = folds_ytrain[_]
         xtest = folds_xtest[_]
         ytest = folds_ytest[_]
-
-        print('-'*30)
-        print(f"Fold {fold}")
 
         train_set = RSNAdataset(
                         './data/reduced_dataset/',
@@ -73,7 +72,7 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
         test_loader = DataLoader(
                     test_set,    
                     batch_size=batch_size,
-                    shuffle=True,
+                    shuffle=False,
                     num_workers=num_workers,
                 )
         
@@ -93,48 +92,29 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
                     patience = 5
                    )
                         
-        #trainer.plot_loss()
-        #trainer.plot_score()
-        #trainer.plot_fscore()
-                
         #testing loop
-        loss, test_acc, test_f1, test_auroc = trainer.test(test_loader)
+        test_acc, test_f1, test_auroc = trainer.test(test_loader)
 
-        fold_loss.append(loss)
         fold_acc.append(test_acc)
         fold_f1.append(test_f1)
         fold_auroc.append(test_auroc)
         
         wandb.log({
-         'FOLD loss', loss,
          'FOLD f1 score':avg_acc,
          'FOLD f1 score':avg_f1,
          'FOLD AUROC': avg_auroc,
          })
-
-    avg_loss = sum(fold_loss)/len(fold_loss)
-    avg_acc = sum(fold_acc)/len(fold_acc)
-    avg_f1 = sum(fold_f1)/len(fold_f1)
-    avg_auroc = sum(fold_auroc)/len(fold_auroc)
-
-    f1 = np.array(fold_f1)
-    f1_std = np.std(f1)
-            
+    
+    f1_std = np.array(fold_f1).std()
     
     elapsed_time = time.time() - start_time
-    wandb.log({
-         'Avg FOLD f1 score':avg_acc,
-         'Avg FOLD f1 score':avg_f1,
-         'Avg FOLD AUROC': avg_auroc,
-         })
     
     
     print('\nCross validation loop complete in {:.0f}m {:.0f}s'.format(elapsed_time // 60, elapsed_time % 60))
-    print('Avg fold loss {:.5f}'.format(avg_loss))
-    print('Avg fold accuracy {:.5f}'.format(avg_acc))
-    print('Avg fold f1_score {:.5f}'.format(avg_f1))
-    print('Avg fold auroc {:.5f}'.format(avg_auroc))
-    print('Std of F1 score {:.5f}'.format(avg_auroc))
+    print('fold accuracy:', fold_acc)
+    print('fold f1_score:',fold_f1)
+    print('fold auroc:', fold_auroc)
+    print('Std F1 score {:.5f}'.format(f1_std))
     
     
     wandb.finish()
