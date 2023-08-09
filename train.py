@@ -29,20 +29,33 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = F.cross_entropy
 
-    folds_xtrain = np.load('./data/folds/new_folds/xtrain.npy', allow_pickle=True)
+    '''folds_xtrain = np.load('./data/folds/new_folds/xtrain.npy', allow_pickle=True)
     folds_xtest = np.load('./data/folds/new_folds/xtest.npy', allow_pickle=True)
     folds_ytrain = np.load('./data/folds/new_folds/ytrain.npy', allow_pickle=True)
-    folds_ytest = np.load('./data/folds/new_folds/ytest.npy', allow_pickle=True)
+    folds_ytest = np.load('./data/folds/new_folds/ytest.npy', allow_pickle=True)'''
+
+    dlt = []
+    empty_fld = [109, 123, 709]
+    df = pd.read_csv("data/train_labels.csv")
+    skf = StratifiedKFold(n_splits=10)
+    X = df['BraTS21ID'].values
+    Y = df['MGMT_value'].values
+
+    for i in empty_fld:
+        j = np.where(X == i)
+        dlt = dlt.append(j)
+        X = np.delete(X, j)
+        
+    Y = np.delete(Y,dlt)
+
+    for fold, (train_idx, test_idx) in enumerate(skf.split(np.zeros(len(Y)), Y), 1):  
     
-    
-    for _ in range(n_fold):
-        fold = _+1
         print(f'--------------FOLD:{fold}-----------------------') 
         
-        xtrain = folds_xtrain[_]
-        ytrain = folds_ytrain[_]
-        xtest = folds_xtest[_]
-        ytest = folds_ytest[_]
+        xtrain = X[train_idx]
+        ytrain = Y[train_idx]
+        xtest = X[test_idx]
+        ytest = Y[test_idx]
 
         train_set = RSNAdataset(
                         './data/reduced_dataset/',
@@ -105,7 +118,8 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
          'FOLD AUROC': avg_auroc,
          })
     
-    f1_std = np.array(fold_f1).std()
+    f1_std = torch.cat(fold_f1)
+    std = torch.std(f1_std)
     
     elapsed_time = time.time() - start_time
     
@@ -114,7 +128,7 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
     print('fold accuracy:', fold_acc)
     print('fold f1_score:',fold_f1)
     print('fold auroc:', fold_auroc)
-    print('Std F1 score {:.5f}'.format(f1_std))
+    print('Std F1 score:'.format(std))
     
     
     wandb.finish()
