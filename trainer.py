@@ -35,9 +35,10 @@ class Trainer():
                      'train_auroc': [],
                     }
         
-        #self.best_valid_score = -np.inf
-        #self.best_valid_loss = np.inf
-        #self.best_f_score = 0
+        self.best_train_auroc = -np.inf
+        self.best_test_auroc = np.inf
+        #self.best_train_f1_score = 0
+        #self.besy
         #self.n_patience = 0
 
         '''self.record = {'test_loss':[],
@@ -89,6 +90,24 @@ class Trainer():
             _f1 = train_f1.compute()
             _roc = train_auroc.compute()
 
+            if _roc > self.best_train_auroc: 
+
+                torch.save({"model_state_dict": self.model.state_dict(),
+                            "best_auroc": self.best_auroc,
+                            "n_epoch": epoch,
+                            },
+                            save_path)
+                
+                self.best_train_auroc = _roc          
+            
+                print(f'Checkpoint saved at {save_path} '
+                      f'Epoch: {epoch+1:03d}/{epochs:03d} '
+                      f'| Train: {_acc :.2f}% '
+                      f'| Validation: {valid_acc :.2f}% '
+                      f'| Best Validation '
+                      f'(Ep. {best_epoch:03d}): {best_train_auroc :.2f}%')
+                
+
             wandb.log({'train loss': _loss,
                       'train acc': _acc,
                       'train f1_score': _f1,
@@ -117,7 +136,7 @@ class Trainer():
         
         #testing------------------
     
-    def test(self, test_loader):
+    def test(self, test_loader, save_path):
         test_time = time.time()
         test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=2).to(self.device)
         test_f1 = torchmetrics.F1Score(task="multiclass", num_classes=2, average='macro').to(self.device)       
@@ -156,8 +175,19 @@ class Trainer():
         f1 = test_f1(test_pred, test_targets)
         auroc = test_auroc(probs, targets)             
                 
-                
-                
+        if auroc > self.best_test_auroc: 
+            torch.save({"model_state_dict": self.model.state_dict(),
+                        "best_auroc": self.best_auroc,
+                        "n_epoch": epoch,
+                        },
+                        save_path)
+            
+            self.best_test_auroc = auroc          
+            print(f'Checkpoint saved at {save_path} '
+                  f'| Test acc: {acc :.2f}% '
+                  f'| Test F1: {f1 :.3f}% '
+                  f'| Best AUROC: {self.best_test_auroc:.3f}')           
+            
             
         wandb.log({'test acc': acc,
                   'test f1_score': f1,
@@ -167,16 +197,3 @@ class Trainer():
         print(f"Testing Time: {(time.time() - test_time)/60:.2f} min | Accuracy: {acc:.2f}% | F1 Score: {f1:.4f} | AUROC: {auroc:.4f}")
         
         return acc, f1, auroc
-                        
-                
-    def save_model(self, n_epoch, save_path):
-            torch.save(
-                {
-                    "model_state_dict": self.model.state_dict(),
-                    "optimizer_state_dict": self.optimizer.state_dict(),
-                    "best__score": self.best_valid_score,
-                    "best_f1_score": self.best_f_score,
-                    "n_epoch": n_epoch,
-                },
-                save_path,
-            )

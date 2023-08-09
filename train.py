@@ -39,7 +39,7 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
     dlt = []
     empty_fld = [109, 123, 709]
     df = pd.read_csv("data/train_labels.csv")
-    skf = StratifiedKFold(n_splits=10)
+    skf = StratifiedKFold(n_splits=n_fold)
     X = df['BraTS21ID'].values
     Y = df['MGMT_value'].values
 
@@ -103,22 +103,18 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
         
         trainer.fit(epochs,
                     train_loader,
-                    save_path = './checkpoints/f"RACNet_model-{fold}.pth',
+                    save_path = f'./checkpoints/RACNet_model_trian_fold:{fold}.pth',
                     patience = 5
                    )
                         
         #testing loop
-        test_acc, test_f1, test_auroc = trainer.test(test_loader)
+        test_acc, test_f1, test_auroc = trainer.test(test_loader,
+                                                    save_path = f'./checkpoints/RACNet_model_test_fold:{fold}.pth'
+                                                    )
 
         fold_acc.append(test_acc)
         fold_f1.append(test_f1)
         fold_auroc.append(test_auroc)
-        
-        wandb.log({
-         'FOLD f1 score':avg_acc,
-         'FOLD f1 score':avg_f1,
-         'FOLD AUROC': avg_auroc,
-         })
     
     f1_std = torch.cat(fold_f1)
     std = torch.std(f1_std)
