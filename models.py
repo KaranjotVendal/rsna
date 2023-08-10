@@ -23,34 +23,34 @@ class RACNet(nn.Module):
         # x shape: BxSxCxHxW
         batch_size, slices, C, H, W = x.size()
         c_in = x.view(batch_size * slices, C, H, W)
-        print('reshape input', c_in.shape)
+        #print('reshape input', c_in.shape)
         
         out = self.cnn(c_in)
-        print('CNN ouput', out.shape)
+        #print('CNN ouput', out.shape)
         
         rnn_in = out.view(batch_size, slices, -1)
-        print('reshaped rnn_in', rnn_in.shape)
+        #print('reshaped rnn_in', rnn_in.shape)
         out, hd = self.rnn(rnn_in)
         #out =F.relu(self.RNN(out))
 
-        print('RNN ouput', out.shape)
+        #print('RNN ouput', out.shape)
         mask = self.mask_layer(org)
         out = out * mask
-        print('mask ouput', out.shape)
+        #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
         out = out.reshape(batch_size, slices * rnn_features)
-        print('reshaped masked output', out.shape)
+        #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
-        print('fc ouput', out.shape)
+        #print('fc ouput', out.shape)
         
         logits = self.classifier(out)
-        print('logits', logits.shape)
+        #print('logits', logits.shape)
         
         output = F.softmax(logits, dim=1)
         
-        print('classifier ouput', logits.shape)
+        #print('classifier ouput', logits.shape)
         #[prob 0, prob 1]
 
         return logits, output

@@ -36,7 +36,7 @@ class Trainer():
                     }
         
         #self.best_train_auroc = -np.inf
-        self.best_test_auroc = np.inf
+        self.best_test_auroc = -np.inf
         #self.best_train_f1_score = 0
         #self.besy
         #self.n_patience = 0
@@ -105,7 +105,7 @@ class Trainer():
             self.hist['train_f1'].append(_f1)
             self.hist['train_auroc'].append(_roc)
             
-            print(f'Epoch: {epoch+1}/{epochs} | Loss: {_loss:.5f} | Accuracy: {_acc:.4f}% | F1 Score: {_f1:.4f} | AUROC: {_roc:.4f} | Time: {time.time() - t}')
+            sprint(f'Epoch: {epoch+1}/{epochs} | Loss: {_loss:.5f} | Accuracy: {_acc:.4f}% | F1 Score: {_f1:.4f} | AUROC: {_roc:.4f} | Time: {time.time() - t}')
             
             test_acc, test_f1, test_auroc = self.test(test_loader, save_path)
             

@@ -31,11 +31,6 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = F.cross_entropy
 
-    '''folds_xtrain = np.load('./data/folds/new_folds/xtrain.npy', allow_pickle=True)
-    folds_xtest = np.load('./data/folds/new_folds/xtest.npy', allow_pickle=True)
-    folds_ytrain = np.load('./data/folds/new_folds/ytrain.npy', allow_pickle=True)
-    folds_ytest = np.load('./data/folds/new_folds/ytest.npy', allow_pickle=True)'''
-
     dlt = []
     empty_fld = [109, 123, 709]
     df = pd.read_csv("data/train_labels.csv")
@@ -45,7 +40,7 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
 
     for i in empty_fld:
         j = np.where(X == i)
-        dlt = dlt.append(j)
+        dlt.append(j)
         X = np.delete(X, j)
         
     Y = np.delete(Y,dlt)
@@ -101,31 +96,22 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
                     fold
                     )
         
-        trainer.fit(epochs,
-                    train_loader,
-                    save_path = f'./checkpoints/RACNet_model_trian_fold:{fold}.pth',
-                    patience = 5
-                   )
-                        
-        #testing loop
-        test_acc, test_f1, test_auroc = trainer.test(test_loader,
-                                                    save_path = f'./checkpoints/RACNet_model_test_fold:{fold}.pth'
-                                                    )
-
-        fold_acc.append(test_acc)
-        fold_f1.append(test_f1)
-        fold_auroc.append(test_auroc)
+        test_acc, test_f1, test_auroc = trainer.fit(epochs,
+                                                    train_loader,
+                                                    save_path = f'./checkpoints/RACNet_model.pth',
+                                                    patience = 5
+                                                   )
     
-    f1_std = torch.cat(fold_f1)
-    std = torch.std(f1_std)
+    f1_std = np.array(test_f1)
+    std = np.std(f1_std)
     
     elapsed_time = time.time() - start_time
     
     
     print('\nCross validation loop complete in {:.0f}m {:.0f}s'.format(elapsed_time // 60, elapsed_time % 60))
-    print('fold accuracy:', fold_acc)
-    print('fold f1_score:',fold_f1)
-    print('fold auroc:', fold_auroc)
+    print('fold accuracy:', test_acc)
+    print('fold f1_score:',test_f1)
+    print('fold auroc:', test_auroc)
     print('Std F1 score:'.format(std))
     
     
