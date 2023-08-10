@@ -35,7 +35,7 @@ class Trainer():
                      'train_auroc': [],
                     }
         
-        self.best_train_auroc = -np.inf
+        #self.best_train_auroc = -np.inf
         self.best_test_auroc = np.inf
         #self.best_train_f1_score = 0
         #self.besy
@@ -64,12 +64,12 @@ class Trainer():
             train_auroc = torchmetrics.AUROC(task="multiclass", num_classes=2).to(self.device)
             
             for idx, batch in enumerate(train_loader):
-                print('-'*50)
+                #print('-'*50)
                 features = batch['X'].to(self.device)
                 targets = batch['y'].to(self.device)
                 org = batch['org']
-                print(org)
-                print("feature shape", features.shape)
+                #print(org)
+                #print("feature shape", features.shape)
                 ### FORWARD AND BACK PROP
                 logits, probs = self.model(features, org)
                 loss = self.criterion(logits, targets)
@@ -82,31 +82,13 @@ class Trainer():
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()  
-                print(f'-----------------Loss: {loss}-----------------------')
-                print('------BATCH ENDING-------')
+                #print(f'-----------------Loss: {loss}-----------------------')
+                #print('------BATCH ENDING-------')
              
             _loss = train_loss.avg
             _acc = train_acc.compute()
             _f1 = train_f1.compute()
             _roc = train_auroc.compute()
-
-            if _roc > self.best_train_auroc: 
-
-                torch.save({"model_state_dict": self.model.state_dict(),
-                            "best_auroc": self.best_auroc,
-                            "n_epoch": epoch,
-                            },
-                            save_path)
-                
-                self.best_train_auroc = _roc          
-            
-                print(f'Checkpoint saved at {save_path} '
-                      f'Epoch: {epoch+1:03d}/{epochs:03d} '
-                      f'| Train: {_acc :.2f}% '
-                      f'| Validation: {valid_acc :.2f}% '
-                      f'| Best Validation '
-                      f'(Ep. {best_epoch:03d}): {best_train_auroc :.2f}%')
-                
 
             wandb.log({'train loss': _loss,
                       'train acc': _acc,
@@ -125,15 +107,22 @@ class Trainer():
             
             print(f'Epoch: {epoch+1}/{epochs} | Loss: {_loss:.5f} | Accuracy: {_acc:.4f}% | F1 Score: {_f1:.4f} | AUROC: {_roc:.4f} | Time: {time.time() - t}')
             
+            test_acc, test_f1, test_auroc = self.test(test_loader, save_path)
             
+            self.hist['test_acc'].append(test_acc)
+            self.hist['test_f1'].append(test_f1)
+            self.hist['test_auroc'].append(test_auroc)
+            
+        
         avg_loss = torch.mean(torch.tensor(self.hist['train_loss']))
         avg_acc = torch.mean(torch.tensor(self.hist['train_acc']))
         avg_f1 = torch.mean(torch.tensor(self.hist['train_f1']))
         avg_auroc = torch.mean(torch.tensor(self.hist['train_auroc']))
 
-        print(f'Training Time: {(time.time() - train_time)/60} min | Avg Loss: {avg_loss:.5f} | Avg Accuracy: {avg_acc:.4f}% | Avg F1 Score: {avg_f1:.4f} | Avg AUROC:{avg_auroc:.4f}')
+        print(f'Training Time: {(time.time() - train_time) // 60:.0f}m {(time.time() - train_time) % 60:.0f}s | Avg Loss: {avg_loss:.5f} | Avg Accuracy: {avg_acc:.4f}% | Avg F1 Score: {avg_f1:.4f} | Avg AUROC:{avg_auroc:.4f}')
         
-        
+        return self.hist['test_acc'], self.hist['test_f1'], self.hist['test_auroc']
+            
         #testing------------------
     
     def test(self, test_loader, save_path):
@@ -154,31 +143,30 @@ class Trainer():
                 targets = batch['y'].to(self.device)
                 
                 org = batch['org']
-                print(org)
+                #print(org)
                 
                 logits, probs = self.model(features, org)
-                predicted_class = probs.argmax(dim=1)
+                #predicted_class = probs.argmax(dim=1)
                 
-                test_pred.append(predicted_class)
+                #test_pred.append(predicted_class)
                 test_targets.append(targets)
                 preds.append(probs)
                 #print('probs shape:',probs.shape)
                 #print('targets shape:', targets.shape)
                 
-                print('------BATCH ENDING-------')
+                #print('------BATCH ENDING-------')
 
-        test_pred = torch.cat(test_pred).flatten()
+        #test_pred = torch.cat(test_pred).flatten()
         test_targets = torch.cat(test_targets).flatten()
         preds = torch.cat(preds)
 
-        acc = test_acc(probs, targets)
-        f1 = test_f1(test_pred, test_targets)
-        auroc = test_auroc(probs, targets)             
+        acc = test_acc(preds, test_targets)
+        f1 = test_f1(preds, test_targets)
+        auroc = test_auroc(preds, test_targets)             
                 
         if auroc > self.best_test_auroc: 
             torch.save({"model_state_dict": self.model.state_dict(),
-                        "best_auroc": self.best_auroc,
-                        "n_epoch": epoch,
+                        "best_auroc": self.best_test_auroc,
                         },
                         save_path)
             
@@ -194,6 +182,6 @@ class Trainer():
                   'test AUROC': auroc
                  })
 
-        print(f"Testing Time: {(time.time() - test_time)/60:.2f} min | Accuracy: {acc:.2f}% | F1 Score: {f1:.4f} | AUROC: {auroc:.4f}")
+        print(f"Testing Time: {(time.time() - test_time) // 60:.0f}m {(time.time() - test_time) % 60:.0f}s | Accuracy: {acc:.2f}% | F1 Score: {f1:.4f} | AUROC: {auroc:.4f}")
         
         return acc, f1, auroc
