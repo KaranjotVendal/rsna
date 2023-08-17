@@ -1,4 +1,3 @@
-import os
 import time
 import numpy as np
 import pandas as pd
@@ -8,33 +7,36 @@ from torch.utils.data import DataLoader
 from torch.nn import functional as F
 from sklearn.model_selection import StratifiedKFold
 
-#import albumentations as A
+import albumentations as A
 #import argparse
 
-from models import RACNet
+from models import *
 from trainer import Trainer
-from datamodules import RSNAdataset
+from datamodule import RSNAdataset
 from utils import LossMeter
+from eval import evaluate
+from config import config
 
 import wandb
 
 
-def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers, device):
+def train():
     
     fold_acc = []
     fold_auroc = []
     fold_f1 = []
+
     
     start_time = time.time()
-    model = RACNet(MODEL, num_classes)
-    model = model.to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    model = Res18GRU(config.NUM_CLASSES)
+    model = model.to(config.DEVICE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
     criterion = F.cross_entropy
 
     dlt = []
     empty_fld = [109, 123, 709]
     df = pd.read_csv("data/train_labels.csv")
-    skf = StratifiedKFold(n_splits=n_fold)
+    skf = StratifiedKFold(n_splits=config.KFOLD)
     X = df['BraTS21ID'].values
     Y = df['MGMT_value'].values
 
@@ -44,6 +46,17 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
         X = np.delete(X, j)
         
     Y = np.delete(Y,dlt)
+
+    '''train_transform = A.Compose([
+                                A.HorizontalFlip(p=0.5),
+                                A.ShiftScaleRotate(
+                                    shift_limit=0.0625, 
+                                    scale_limit=0.1, 
+                                    rotate_limit=10, 
+                                    p=0.5
+                                ),
+                                A.RandomBrightnessContrast(p=0.5),
+                            ])'''
 
     for fold, (train_idx, test_idx) in enumerate(skf.split(np.zeros(len(Y)), Y), 1):  
     
@@ -55,70 +68,73 @@ def train(MODEL, lr, num_classes, path, epochs, n_fold, batch_size, num_workers,
         ytest = Y[test_idx]
 
         train_set = RSNAdataset(
-                        './data/reduced_dataset/',
+                        config.DATA_PATH,
                         xtrain,  
                         ytrain,
-                        n_slices=254,
-                        img_size=112,
+                        n_slices=config.N_SLICES,
+                        img_size=config.IMG_SIZE,
+                        type = config.MOD,
                         transform=None
                             )
     
         test_set = RSNAdataset(
-                        './data/reduced_dataset/',
+                        config.DATA_PATH,
                         xtest,  
                         ytest,
-                        n_slices=254,
-                        img_size=112,
+                        n_slices=config.N_SLICES,
+                        img_size=config.IMG_SIZE,
+                        type = config.MOD,
                         transform=None
                             )
         
         train_loader = DataLoader(
                     train_set,    
-                    batch_size=batch_size,
+                    batch_size=config.BATCH_SIZE,
                     shuffle=True,
-                    num_workers=num_workers,
+                    num_workers=config.NUM_WORKERS,
                 )
         
         test_loader = DataLoader(
                     test_set,    
-                    batch_size=batch_size,
+                    batch_size=config.BATCH_SIZE,
                     shuffle=False,
-                    num_workers=num_workers,
+                    num_workers=config.NUM_WORKERS,
                 )
         
         trainer = Trainer(
                     model, 
-                    device, 
+                    config.DEVICE, 
                     optimizer, 
                     criterion,
-                    epochs,
+                    config.NUM_EPOCHS,
                     LossMeter, 
                     fold
                     )
         
-        test_acc, test_f1, test_auroc = trainer.fit(epochs,
-                                                    train_loader,
-                                                    save_path = f'./checkpoints/RACNet_model.pth',
-                                                    patience = 5
-                                                   )
-    
-    f1_std = np.array(test_f1)
-    std = np.std(f1_std)
+        #test_acc, test_f1, test_auroc = 
+        trainer.fit(train_loader,
+                    test_loader,
+                    save_path = f'./checkpoints/{config.MODEL}_model_{config.MOD}_{fold}.pth',
+                    )
+
+        acc, f1, auroc = evaluate(test_loader,
+                                fold,
+                                config.MOD,
+                                config.DEVICE)
+        
+        fold_acc.append(acc)
+        fold_f1.append(f1)
+        fold_auroc.append(auroc)
+
     
     elapsed_time = time.time() - start_time
     
     
-    print('\nCross validation loop complete in {:.0f}m {:.0f}s'.format(elapsed_time // 60, elapsed_time % 60))
-    print('fold accuracy:', test_acc)
-    print('fold f1_score:',test_f1)
-    print('fold auroc:', test_auroc)
-    print('Std F1 score:'.format(std))
-    
+    print('\nCross validation loop complete for {} in {:.0f}m {:.0f}s'.format(config.MOD, elapsed_time // 60, elapsed_time % 60))
+    print('\nfold accuracy:', fold_acc)
+    print('\nfold f1_score:',fold_f1)
+    print('\nfold auroc:', fold_auroc)
+    print('\nStd F1 score:', np.std(np.array(fold_f1)))
+    print('\nAVG performance of model:', np.mean(np.array(fold_f1)))
     
     wandb.finish()
-
-
-
-
-
-

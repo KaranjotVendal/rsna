@@ -19,7 +19,7 @@ def seed_everything(seed):
 def load_image(path, size=(112,112)):
     image = cv2.imread(path, 0)
     if image is None:
-        return np.zeros()
+        return np.zeros((112, 112))
     
     image = cv2.resize(image, size) / 255
     return image.astype('f')
