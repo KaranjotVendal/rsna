@@ -15,7 +15,7 @@ from utils import load_image
 # [batch, max_slices, C, H, W], orginal no of slices before padding = []
 class RSNAdataset(Dataset):
     def __init__(self, patient_path, paths, targets, n_slices, img_size, type='FLAIR', transform=None):
-        #(self, './data/reduced_dataset/', t['xtrain'],t['ytrain'], 254, 112, FLAIR, transform)
+       
         self.patient_path = patient_path
         self.paths = paths
         self.targets = targets
@@ -37,8 +37,6 @@ class RSNAdataset(Dataset):
                 random.seed(seed)
                 images[i] = self.transform(image=images[i])["image"]
         
-        #images = [torch.tensor(image, dtype=torch.float32) for image in images]
-            
         dup_len = self.n_slices - org_size
         if org_size == 0:
             dup = np.zeros((1, self.img_size, self.img_size))

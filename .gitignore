@@ -160,4 +160,8 @@ cython_debug/
 #.idea/
 
 data/reduced_dataset/
+plots/
+/wandb
 
+.Untitled.ipynb
+.gradcam.py

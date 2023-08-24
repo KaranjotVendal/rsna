@@ -2,19 +2,26 @@ import torch
 
 class key():
     
-    wandb_key = 'a2a7828ed68b3cba08f2703971162138c680b664'
+    wandb_key = 'abc'
 
 class config():
     DATA_PATH = 'data/reduced_dataset/'
-    MODEL = 'Res18GRU'
-    BATCH_SIZE = 3
-    NUM_EPOCHS = 5
-    LEARNING_RATE = 0.0001
+    MODEL = 'Res50GRU'
+    RNN = 64
+    FC = 32   
+    NUM_CLASSES = 2
+    
+    BATCH_SIZE = 8
+    NUM_EPOCHS = 25
+    LEARNING_RATE = 0.00005
     
     NUM_WORKERS = 0
-    NUM_CLASSES = 2
-    KFOLD= 10
+    KFOLD= 5
 
+    WANDB = False
+    CHKPT = False
+    
+#mod = ['FLAIR', 'T1w', 'T1wCE', 'T2w']
     MOD = 'FLAIR'
     if MOD == 'FLAIR':
         N_SLICES = 254

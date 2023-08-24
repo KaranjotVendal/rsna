@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torchmetrics
 import wandb
-
+from config import config
 
 class Trainer():
     def __init__(
@@ -34,23 +34,9 @@ class Trainer():
                      'train_auroc': [],
                     }
         
-        #self.best_train_auroc = -np.inf
         self.best_test_auroc = -np.inf
-        #self.best_train_f1_score = 0
-        #self.besy
-        #self.n_patience = 0
+        
 
-        '''self.record = {'test_loss':[],
-                     'test_acc':[],
-                     'test_f1':[],
-                     'test_auroc':[],
-                     'train_loss':[],
-                     'train_acc':[],
-                     'train_f1': [],
-                     'train_auroc': [],
-                    }'''
-        
-        
     def fit(self, train_loader, test_loader, save_path, patience = 0):
         train_time = time.time()
         
@@ -63,12 +49,9 @@ class Trainer():
             train_auroc = torchmetrics.AUROC(task="multiclass", num_classes=2).to(self.device)
             
             for idx, batch in enumerate(train_loader):
-                #print('-'*50)
                 features = batch['X'].to(self.device)
                 targets = batch['y'].to(self.device)
                 org = batch['org']
-                #print(org)
-                #print("feature shape", features.shape)
                 logits, probs = self.model(features, org)
                 loss = self.criterion(logits, targets)
                 
@@ -80,19 +63,18 @@ class Trainer():
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()  
-                #print(f'-----------------Loss: {loss}-----------------------')
-                #print('------BATCH ENDING-------')
-             
+                
             _loss = train_loss.avg
             _acc = train_acc.compute()
             _f1 = train_f1.compute()
             _roc = train_auroc.compute()
 
-            wandb.log({'train loss': _loss,
-                      'train acc': _acc,
-                      'train f1_score': _f1,
-                      'train AUROC': _roc
-                     })
+            if config.WANDB:
+                wandb.log({'train loss': _loss,
+                        'train acc': _acc,
+                        'train f1_score': _f1,
+                        'train AUROC': _roc
+                        })
 
             train_acc.reset()
             train_f1.reset()
@@ -105,8 +87,9 @@ class Trainer():
             
             print(f' Train Epoch: {epoch+1}/{self.epochs} | Loss: {_loss:.5f} | Accuracy: {_acc:.4f}% | F1 Score: {_f1:.4f} | AUROC: {_roc:.4f} | Time: {time.time() - t}')
             
-            val_acc, val_f1, val_auroc = self.validate(test_loader, save_path)
+            val_loss, val_acc, val_f1, val_auroc = self.validate(test_loader, save_path)
             
+            self.hist['val_loss'].append(val_loss)
             self.hist['val_acc'].append(val_acc)
             self.hist['val_f1'].append(val_f1)
             self.hist['val_auroc'].append(val_auroc)
@@ -119,9 +102,7 @@ class Trainer():
 
         print(f'Training Time: {(time.time() - train_time) // 60:.0f}m {(time.time() - train_time) % 60:.0f}s | Avg Loss: {avg_loss:.5f} | Avg Accuracy: {avg_acc:.3f}% | Avg F1 Score: {avg_f1:.4f} | Avg AUROC:{avg_auroc:.4f}')
         
-        #return self.hist['val_acc'], self.hist['val_f1'], self.hist['val_auroc']
             
-    #testing------------------
     
     def validate(self, test_loader, save_path):
         test_time = time.time()
@@ -139,24 +120,16 @@ class Trainer():
             with torch.no_grad():
                 features = batch['X'].to(self.device)
                 targets = batch['y'].to(self.device)
-                
                 org = batch['org']
-                #print(org)
-                
+
                 logits, probs = self.model(features, org)
                 loss = self.criterion(logits, targets)
-                #predicted_class = probs.argmax(dim=1)
                 val_loss.update(loss.detach().item())
                 
-                #test_pred.append(predicted_class)
                 test_targets.append(targets)
                 preds.append(probs.detach())
-                #print('probs shape:',probs.shape)
-                #print('targets shape:', targets.shape)
                 
-                #print('------BATCH ENDING-------')
-
-        #test_pred = torch.cat(test_pred).flatten()
+                
         test_targets = torch.cat(test_targets).flatten()
         preds = torch.cat(preds)
 
@@ -183,14 +156,12 @@ class Trainer():
         val_f1.reset()
         val_auroc.reset()
             
-        wandb.log({'val loss':loss,
+        if config.WANDB:
+            wandb.log({'val loss':loss,
                     'val acc': acc,
                     'val f1_score': f1,
                     'val AUROC': auroc
                     })
 
         print(f"Validation Epoch: {(time.time() - test_time) // 60:.0f}m {(time.time() - test_time) % 60:.0f}s | Accuracy: {acc:.2f}% | F1 Score: {f1:.4f} | AUROC: {auroc:.4f}")
-        print('acc shape:', acc.shape)
-        print('f1 shape:', f1.shape)
-        print('auroc shape:', auroc.shape)
-        return acc.item(), f1.item(), auroc.item()
+        return loss, acc.item(), f1.item(), auroc.item()
