@@ -9,6 +9,7 @@ Abstract—In the quest to improve the diagnosis and treatment of glioblastoma, 
 ## Dataset
 
 - [RSNA dataset](https://drive.google.com/file/d/1b1cbJojNYjCLrxbz0KG8ca3tiYPt_3B0/view?usp=sharing)
+- [train labels](https://drive.google.com/file/d/1rCqwfbEKd9ICnRhwwq5H81ZHfYos0Yex/view?usp=drive_link)
 
 
 ## Plots and weights
