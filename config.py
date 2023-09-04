@@ -2,13 +2,13 @@ import torch
 
 class key():
     
-    wandb_key = 'abc'
+    wandb_key = 'a2a7828ed68b3cba08f2703971162138c680b664'
 
 class config():
     DATA_PATH = 'data/reduced_dataset/'
-    MODEL = 'Res50GRU'
-    RNN = 64
-    FC = 32   
+    MODEL = 'ConvxLSTM'
+    RNN = 64 #no of hidden units
+    FC = 32   #no of units
     NUM_CLASSES = 2
     
     BATCH_SIZE = 8
@@ -18,13 +18,13 @@ class config():
     NUM_WORKERS = 0
     KFOLD= 5
 
-    WANDB = False
-    CHKPT = False
+    WANDB = True
+    CHKPT = True
     
 #mod = ['FLAIR', 'T1w', 'T1wCE', 'T2w']
     MOD = 'FLAIR'
     if MOD == 'FLAIR':
-        N_SLICES = 254
+        N_SLICES = 250 #254
     elif MOD == 'T1wCE':
         N_SLICES = 203
     elif MOD == 'T1w':

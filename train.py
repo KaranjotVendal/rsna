@@ -16,7 +16,7 @@ from datamodule import RSNAdataset
 from utils import LossMeter, save_metrics_to_json, update_metrics
 from eval import evaluate
 from config import config
-from plotting import plot_train_valid_fold, plot_trian_valid_all_fold, plot_test_metrics
+from plotting import plot_train_valid_fold, plot_train_valid_all_fold, plot_test_metrics
 
 import wandb
 
@@ -33,7 +33,7 @@ def train():
     dlt = []
     empty_fld = [109, 123, 709]
     df = pd.read_csv("data/train_labels.csv")
-    skf = StratifiedKFold(n_splits=config.KFOLD)
+    skf = StratifiedKFold(n_splits=config.KFOLD, shuffle=True, random_state=123)
     X = df['BraTS21ID'].values
     Y = df['MGMT_value'].values
 
@@ -44,7 +44,7 @@ def train():
         
     Y = np.delete(Y,dlt)
 
-    '''train_transform = A.Compose([
+    train_transform = A.Compose([
                                 A.HorizontalFlip(p=0.5),
                                 A.ShiftScaleRotate(
                                     shift_limit=0.0625, 
@@ -52,8 +52,7 @@ def train():
                                     rotate_limit=10, 
                                     p=0.5
                                 ),
-                                A.RandomBrightnessContrast(p=0.5),
-                            ])'''
+                            ])
 
     for fold, (train_idx, test_idx) in enumerate(skf.split(np.zeros(len(Y)), Y), 1):  
     
@@ -176,22 +175,22 @@ def train():
     
     #plotting loss
     plot_train_valid_fold(json_path, 'loss')
-    plot_trian_valid_all_fold(json_path, 'loss')
+    plot_train_valid_all_fold(json_path, 'loss')
     
     #plotting acc
     plot_train_valid_fold(json_path, 'acc')
-    plot_trian_valid_all_fold(json_path, 'acc')
+    plot_train_valid_all_fold(json_path, 'acc')
     plot_test_metrics(json_path, 'acc')
 
 
     #plotting f1
     plot_train_valid_fold(json_path, 'f1')
-    plot_trian_valid_all_fold(json_path, 'f1')
+    plot_train_valid_all_fold(json_path, 'f1')
     plot_test_metrics(json_path, 'f1')
 
     #plotting auroc
     plot_train_valid_fold(json_path, 'auroc')
-    plot_trian_valid_all_fold(json_path, 'auroc')
+    plot_train_valid_all_fold(json_path, 'auroc')
     plot_test_metrics(json_path, 'auroc')
    
     elapsed_time = time.time() - start_time
@@ -206,8 +205,12 @@ def train():
 
     if config.WANDB:
         wandb.log({
-        'Avg performance': np.mean(np.array(fold_f1)),
-        'Std f1 score': np.std(np.array(fold_f1))
+        'Avg performance f1': np.mean(np.array(fold_f1)),
+        'Std f1 score': np.std(np.array(fold_f1)),
+        'Avg performance acc': np.mean(np.array(fold_acc)),
+        'Std acc score': np.std(np.array(fold_acc)),
+        'Avg performance auroc': np.mean(np.array(fold_auroc)),
+        'Std auroc score': np.std(np.array(fold_auroc)),
         })
     
         wandb.finish()

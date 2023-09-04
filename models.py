@@ -21,10 +21,10 @@ class Res18GRU(nn.Module):
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=64, batch_first= True, bidirectional=False)
+        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
-        self.fc = nn.Linear(16256, 32, bias=True)
-        self.classifier = nn.Linear(32, num_classes, bias=True)        
+        self.fc = nn.Linear(config.N_SLICES * config.RNN, config.FC, bias=True)
+        self.classifier = nn.Linear(config.FC, num_classes, bias=True)        
         
     def forward(self, x, org):
         # x shape: BxSxCxHxW
@@ -46,7 +46,7 @@ class Res18GRU(nn.Module):
         #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
-        out = out.reshape(batch_size, slices * rnn_features)
+        out = out.reshape(batch, slices * rnn_features)
         #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
@@ -67,9 +67,9 @@ class Res18GRU(nn.Module):
         org = org[0].cpu().numpy()
         for i in org:
             #print(i)
-            dup = 254 - i
-            mask_1 = torch.ones(i, 64) # .to(device='cuda')
-            mask_0 = torch.zeros(dup, 64) #.to(device='cuda')
+            dup = config.N_SLICES - i
+            mask_1 = torch.ones(i, config.RNN) # .to(device='cuda')
+            mask_0 = torch.zeros(dup, config.RNN) #.to(device='cuda')
             mask = torch.cat((mask_1, mask_0), 0)
             masks.append(mask)
 
@@ -87,7 +87,7 @@ class Res50GRU(nn.Module):
         FC: 32 units
         classifier: 2 units'''
 
-    def __init__(self, MODEL, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
         
         self.cnn = timm.create_model('resnet50d.ra2_in1k', pretrained=True, num_classes=0, in_chans=1)
@@ -95,10 +95,10 @@ class Res50GRU(nn.Module):
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=64, batch_first= True, bidirectional=False)
+        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
-        self.fc = nn.Linear(16256, 32, bias=True)
-        self.classifier = nn.Linear(32, num_classes, bias=True)        
+        self.fc = nn.Linear(config.N_SLICES * config.RNN, config.FC, bias=True)
+        self.classifier = nn.Linear(config.FC, num_classes, bias=True)        
         
     def forward(self, x, org):
         # x shape: BxSxCxHxW
@@ -120,7 +120,7 @@ class Res50GRU(nn.Module):
         #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
-        out = out.reshape(batch_size, slices * rnn_features)
+        out = out.reshape(batch, slices * rnn_features)
         #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
@@ -141,9 +141,9 @@ class Res50GRU(nn.Module):
         org = org[0].cpu().numpy()
         for i in org:
             #print(i)
-            dup = 254 - i
-            mask_1 = torch.ones(i, 64) # .to(device='cuda')
-            mask_0 = torch.zeros(dup, 64) #.to(device='cuda')
+            dup = config.RNN - i
+            mask_1 = torch.ones(i, config.RNN) # .to(device='cuda')
+            mask_0 = torch.zeros(dup, config.RNN) #.to(device='cuda')
             mask = torch.cat((mask_1, mask_0), 0)
             masks.append(mask)
 
@@ -158,7 +158,7 @@ class Res18LSTM(nn.Module):
         FC: 32 units
         classifier: 2 units'''
     
-    def __init__(self, MODEL, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
         
         self.cnn = timm.create_model('resnet18', pretrained=True, num_classes=0, in_chans=1)
@@ -166,10 +166,10 @@ class Res18LSTM(nn.Module):
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=64, batch_first= True, bidirectional=False)
+        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
-        self.fc = nn.Linear(16256, 32, bias=True)
-        self.classifier = nn.Linear(32, num_classes, bias=True)        
+        self.fc = nn.Linear(config.N_SLICES * config.RNN, config.FC, bias=True)
+        self.classifier = nn.Linear(config.FC, num_classes, bias=True)        
         
     def forward(self, x, org):
         # x shape: BxSxCxHxW
@@ -191,7 +191,7 @@ class Res18LSTM(nn.Module):
         #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
-        out = out.reshape(batch_size, slices * rnn_features)
+        out = out.reshape(batch, slices * rnn_features)
         #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
@@ -212,9 +212,9 @@ class Res18LSTM(nn.Module):
         org = org[0].cpu().numpy()
         for i in org:
             #print(i)
-            dup = 254 - i
-            mask_1 = torch.ones(i, 64) # .to(device='cuda')
-            mask_0 = torch.zeros(dup, 64) #.to(device='cuda')
+            dup = config.N_SLICES - i
+            mask_1 = torch.ones(i, config.RNN) # .to(device='cuda')
+            mask_0 = torch.zeros(dup, config.RNN) #.to(device='cuda')
             mask = torch.cat((mask_1, mask_0), 0)
             masks.append(mask)
 
@@ -231,7 +231,7 @@ class Res50LSTM(nn.Module):
         FC: 32 units
         classifier: 2 units'''
 
-    def __init__(self, MODEL, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
         
         self.cnn = timm.create_model('resnet50d.ra2_in1k', pretrained=True, num_classes=0, in_chans=1)
@@ -239,10 +239,10 @@ class Res50LSTM(nn.Module):
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=64, batch_first= True, bidirectional=False)
+        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
-        self.fc = nn.Linear(16256, 32, bias=True)
-        self.classifier = nn.Linear(32, num_classes, bias=True)        
+        self.fc = nn.Linear(config.N_SLICES * config.RNN, config.FC, bias=True)
+        self.classifier = nn.Linear(config.FC, num_classes, bias=True)        
         
     def forward(self, x, org):
         # x shape: BxSxCxHxW
@@ -264,7 +264,7 @@ class Res50LSTM(nn.Module):
         #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
-        out = out.reshape(batch_size, slices * rnn_features)
+        out = out.reshape(batch, slices * rnn_features)
         #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
@@ -285,9 +285,9 @@ class Res50LSTM(nn.Module):
         org = org[0].cpu().numpy()
         for i in org:
             #print(i)
-            dup = 254 - i
-            mask_1 = torch.ones(i, 64) # .to(device='cuda')
-            mask_0 = torch.zeros(dup, 64) #.to(device='cuda')
+            dup = config.RNN - i
+            mask_1 = torch.ones(i, config.RNN) # .to(device='cuda')
+            mask_0 = torch.zeros(dup, config.RNN) #.to(device='cuda')
             mask = torch.cat((mask_1, mask_0), 0)
             masks.append(mask)
 
@@ -304,7 +304,7 @@ class ConvxGRU(nn.Module):
         FC: 32 units
         classifier: 2 units'''
     
-    def __init__(self, MODEL, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
         
         self.cnn = timm.create_model('convnextv2_tiny.fcmae_ft_in22k_in1k', pretrained=True, num_classes=0, in_chans=1)
@@ -312,10 +312,10 @@ class ConvxGRU(nn.Module):
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=64, batch_first= True, bidirectional=False)
+        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
-        self.fc = nn.Linear(16256, 32, bias=True)
-        self.classifier = nn.Linear(32, num_classes, bias=True)        
+        self.fc = nn.Linear(config.N_SLICES * config.BATCH_SIZE, config.FC, bias=True)
+        self.classifier = nn.Linear(config.FC, num_classes, bias=True)        
         
     def forward(self, x, org):
         # x shape: BxSxCxHxW
@@ -337,7 +337,7 @@ class ConvxGRU(nn.Module):
         #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
-        out = out.reshape(batch_size, slices * rnn_features)
+        out = out.reshape(batch, slices * rnn_features)
         #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
@@ -358,9 +358,9 @@ class ConvxGRU(nn.Module):
         org = org[0].cpu().numpy()
         for i in org:
             #print(i)
-            dup = 254 - i
-            mask_1 = torch.ones(i, 64) # .to(device='cuda')
-            mask_0 = torch.zeros(dup, 64) #.to(device='cuda')
+            dup = config.N_SLICES - i
+            mask_1 = torch.ones(i, config.RNN) # .to(device='cuda')
+            mask_0 = torch.zeros(dup, config.RNN) #.to(device='cuda')
             mask = torch.cat((mask_1, mask_0), 0)
             masks.append(mask)
 
@@ -377,7 +377,7 @@ class ConvxLSTM(nn.Module):
         LSTM: 1 layer, 64 units, unidirectional
         FC: 32 units
         classifier: 2 units'''
-    def __init__(self, MODEL, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
         
         self.cnn = timm.create_model('convnextv2_tiny.fcmae_ft_in22k_in1k', pretrained=True, num_classes=0, in_chans=1)
@@ -385,10 +385,10 @@ class ConvxLSTM(nn.Module):
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=64, batch_first= True, bidirectional=False)
+        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
-        self.fc = nn.Linear(16256, 32, bias=True)
-        self.classifier = nn.Linear(32, num_classes, bias=True)        
+        self.fc = nn.Linear(config.N_SLICES * config.RNN, config.FC, bias=True)
+        self.classifier = nn.Linear(config.FC, num_classes, bias=True)        
         
     def forward(self, x, org):
         # x shape: BxSxCxHxW
@@ -410,7 +410,7 @@ class ConvxLSTM(nn.Module):
         #print('mask ouput', out.shape)
         
         batch, slices, rnn_features = out.size()
-        out = out.reshape(batch_size, slices * rnn_features)
+        out = out.reshape(batch, slices * rnn_features)
         #print('reshaped masked output', out.shape)
         
         out = F.relu(self.fc(out))
@@ -430,10 +430,9 @@ class ConvxLSTM(nn.Module):
         masks = []
         org = org[0].cpu().numpy()
         for i in org:
-            #print(i)
-            dup = 254 - i
-            mask_1 = torch.ones(i, 64) # .to(device='cuda')
-            mask_0 = torch.zeros(dup, 64) #.to(device='cuda')
+            dup = config.N_SLICES - i
+            mask_1 = torch.ones(i, config.RNN) # .to(device='cuda')
+            mask_0 = torch.zeros(dup, config.RNN) #.to(device='cuda')
             mask = torch.cat((mask_1, mask_0), 0)
             masks.append(mask)
 

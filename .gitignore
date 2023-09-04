@@ -163,5 +163,6 @@ data/reduced_dataset/
 plots/
 /wandb
 
-.Untitled.ipynb
-.gradcam.py
+Untitled.ipynb
+gradcam.py
+prepdataset.ipynb

@@ -65,9 +65,6 @@ def plot_metrics_from_dict(path, metrics_dict, metrics_to_plot=['loss', 'f1', 'a
         plt.show()
         plt.close()
 
-
-
-
 def plot_train_valid_fold(json_path, metrics):
     with open(json_path, "r") as file:
         metrics_json = json.load(file)    
@@ -96,13 +93,13 @@ def plot_train_valid_fold(json_path, metrics):
         plt.legend()
         plt.grid(True)
 
-        save_path = os.path.join(fld_dir, f"train_valid_{metrics}_fold_{fold}.png")
+        save_path = os.path.join(fld_dir, f"train_valid_{metrics}_fold_{fold}.png", dpi=300)
         plt.savefig(save_path)
         plt.close()
 
 
 
-def plot_trian_valid_all_fold(json_path, metrics):
+def plot_train_valid_all_fold(json_path, metrics):
     with open(json_path, "r") as file:
         metrics_json = json.load(file)    
 
@@ -117,16 +114,16 @@ def plot_trian_valid_all_fold(json_path, metrics):
 
     plt.figure(figsize=(12, 6))
     for fold, data in metrics_json.items():
-        plt.plot(data['train'][metrics], label=f'Train Loss Fold {fold}', marker = 'o')
-        plt.plot(data['valid'][metrics], linestyle='dashed', label=f'Valid Loss Fold {fold}', marker = 'o')
+        plt.plot(data['train'][metrics], label=f'Train {metrics} Fold {fold}', marker = 'o')
+        plt.plot(data['valid'][metrics], linestyle='dashed', label=f'Valid {metrics} Fold {fold}', marker = 'o')
 
-    plt.title(f'Train & Valid {metrics} Across All Folds')
+    plt.title(f'Train & Valid {metrics} across All Folds')
     plt.xlabel('Epochs')
     plt.ylabel(metrics)
     plt.legend()
     plt.grid(True)
 
-    save_dir = os.path.join(all_fld_dir, f"train_valid_{metrics}.png")
+    save_dir = os.path.join(all_fld_dir, f"train_valid_{metrics}.png", dpi=300)
     plt.savefig(save_dir)
     plt.close()
 
@@ -146,9 +143,9 @@ def plot_test_metrics(json_filepath, metric_name):
     plt.plot(folds, metric_values, marker='o', linestyle='-')
     plt.xlabel("Folds")
     plt.ylabel(f"{metric_name.capitalize()} Score")
-    plt.title(f"{metric_name.capitalize()} Score w.r.t Folds for {dataset_type.capitalize()} Dataset")
+    plt.title(f"{metric_name.capitalize()} Score w.r.t Folds")
     plt.xticks(folds)  # This ensures each fold is shown on the x-axis
     plt.grid(True)#, which='both', linestyle='--', linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(f'./plots/{config.MODEL}/test_{metric_name}_plot.png')
+    plt.savefig(f'./plots/{config.MODEL}/test_{metric_name}_plot.png', dpi=300)
     plt.close()

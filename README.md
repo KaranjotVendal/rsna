@@ -11,7 +11,7 @@ Abstract—In the quest to improve the diagnosis and treatment of glioblastoma, 
 - [RSNA dataset](https://drive.google.com/file/d/1b1cbJojNYjCLrxbz0KG8ca3tiYPt_3B0/view?usp=sharing)
 - [train labels](https://drive.google.com/file/d/1rCqwfbEKd9ICnRhwwq5H81ZHfYos0Yex/view?usp=drive_link)
 
-
+Put the downloaded dataset and train labels in the input folder.
 ## Plots and weights
 
 Plots and weights of the conducted experiments can be found here. [Link](https://drive.google.com/drive/folders/1FHvKqMEwIKz-hA0cazLJTLhhqr3gAL27?usp=drive_link)
