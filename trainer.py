@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torchmetrics
 import wandb
+import os
 from config import config
 
 class Trainer():
@@ -141,6 +142,10 @@ class Trainer():
                 
         if auroc > self.best_test_auroc: 
             self.best_test_auroc = auroc
+            
+            base_dir = "./checkpoints"
+            if not os.path.exists(base_dir):
+                os.mkdir(base_dir)
 
             torch.save({"model_state_dict": self.model.state_dict(),
                         "best_auroc": self.best_test_auroc,

@@ -19,7 +19,7 @@ class Res18GRU(nn.Module):
         self.cnn = timm.create_model('resnet18.fb_swsl_ig1b_ft_in1k', pretrained=True, num_classes=0, in_chans=1)
         for param in self.cnn.parameters():
             param.requires_grad = False
-        in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
+        in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
         self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
@@ -93,7 +93,7 @@ class Res50GRU(nn.Module):
         self.cnn = timm.create_model('resnet50d.ra2_in1k', pretrained=True, num_classes=0, in_chans=1)
         for param in self.cnn.parameters():
             param.requires_grad = False
-        in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
+        in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
         self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
@@ -164,7 +164,7 @@ class Res18LSTM(nn.Module):
         self.cnn = timm.create_model('resnet18', pretrained=True, num_classes=0, in_chans=1)
         for param in self.cnn.parameters():
             param.requires_grad = False
-        in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
+        in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
         self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
@@ -237,7 +237,7 @@ class Res50LSTM(nn.Module):
         self.cnn = timm.create_model('resnet50d.ra2_in1k', pretrained=True, num_classes=0, in_chans=1)
         for param in self.cnn.parameters():
             param.requires_grad = False
-        in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
+        in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
         self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
@@ -310,7 +310,7 @@ class ConvxGRU(nn.Module):
         self.cnn = timm.create_model('convnextv2_tiny.fcmae_ft_in22k_in1k', pretrained=True, num_classes=0, in_chans=1)
         for param in self.cnn.parameters():
             param.requires_grad = False
-        in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
+        in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
         self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
@@ -383,7 +383,7 @@ class ConvxLSTM(nn.Module):
         self.cnn = timm.create_model('convnextv2_tiny.fcmae_ft_in22k_in1k', pretrained=True, num_classes=0, in_chans=1)
         for param in self.cnn.parameters():
             param.requires_grad = False
-        in_features = self.cnn(torch.randn(2, 1, 112, 112)).shape[1]
+        in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
         self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         

@@ -93,8 +93,8 @@ def plot_train_valid_fold(json_path, metrics):
         plt.legend()
         plt.grid(True)
 
-        save_path = os.path.join(fld_dir, f"train_valid_{metrics}_fold_{fold}.png", dpi=300)
-        plt.savefig(save_path)
+        save_path = os.path.join(fld_dir, f"train_valid_{metrics}_fold_{fold}.png")
+        plt.savefig(save_path, dpi=300)
         plt.close()
 
 
@@ -123,8 +123,8 @@ def plot_train_valid_all_fold(json_path, metrics):
     plt.legend()
     plt.grid(True)
 
-    save_dir = os.path.join(all_fld_dir, f"train_valid_{metrics}.png", dpi=300)
-    plt.savefig(save_dir)
+    save_dir = os.path.join(all_fld_dir, f"train_valid_{metrics}.png")
+    plt.savefig(save_dir, dpi=300)
     plt.close()
 
 

@@ -12,25 +12,26 @@ class config():
     NUM_CLASSES = 2
     
     BATCH_SIZE = 8
-    NUM_EPOCHS = 25
-    LEARNING_RATE = 0.00005
+    NUM_EPOCHS = 15
+    LEARNING_RATE = 0.0001
     
     NUM_WORKERS = 0
     KFOLD= 5
 
     WANDB = True
     CHKPT = True
+    TRANSFORM = False
     
 #mod = ['FLAIR', 'T1w', 'T1wCE', 'T2w']
-    MOD = 'FLAIR'
+    MOD = 'T1w'
     if MOD == 'FLAIR':
         N_SLICES = 250 #254
     elif MOD == 'T1wCE':
-        N_SLICES = 203
+        N_SLICES = 250 #203
     elif MOD == 'T1w':
-        N_SLICES = 203
+        N_SLICES = 250 #203
     elif MOD == 'T2w':
-        N_SLICES = 250
+        N_SLICES = 300 #250
 
 
     IMG_SIZE = 112

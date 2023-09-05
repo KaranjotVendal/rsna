@@ -44,15 +44,13 @@ def train():
         
     Y = np.delete(Y,dlt)
 
-    train_transform = A.Compose([
-                                A.HorizontalFlip(p=0.5),
-                                A.ShiftScaleRotate(
-                                    shift_limit=0.0625, 
-                                    scale_limit=0.1, 
-                                    rotate_limit=10, 
-                                    p=0.5
-                                ),
-                            ])
+    if config.TRANSFORM:
+        train_transform = A.Compose([
+                                    #A.HorizontalFlip(p=0.5),
+                                    A.Rotate(limit=10, p=0.5)
+                                ])
+    else:
+        train_transform = None
 
     for fold, (train_idx, test_idx) in enumerate(skf.split(np.zeros(len(Y)), Y), 1):  
     
@@ -74,7 +72,7 @@ def train():
                         n_slices=config.N_SLICES,
                         img_size=config.IMG_SIZE,
                         type = config.MOD,
-                        transform=None
+                        transform=train_transform
                             )
     
         test_set = RSNAdataset(

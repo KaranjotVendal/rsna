@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import cv2
 import json
+from config import config
 
 
 def seed_everything(seed):
@@ -16,10 +17,10 @@ def seed_everything(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
 
-def load_image(path, size=(112,112)):
+def load_image(path, size=(config.IMG_SIZE, config.IMG_SIZE)):
     image = cv2.imread(path, 0)
     if image is None:
-        return np.zeros((112, 112))
+        return np.zeros((config.IMG_SIZE, config.IMG_SIZE))
     
     image = cv2.resize(image, size) / 255
     return image.astype('f')
@@ -85,6 +86,9 @@ class TensorEncoder(json.JSONEncoder):
 
 def save_metrics_to_json(metrics, model_name, encoder=TensorEncoder):
     base_dir = './plots'
+    if not os.path.exists(base_dir):
+        os.mkdir(base_dir)
+        
     save_path = os.path.join(base_dir, model_name)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
