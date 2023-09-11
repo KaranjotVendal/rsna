@@ -381,11 +381,14 @@ class ConvxLSTM(nn.Module):
         super().__init__()
         
         self.cnn = timm.create_model('convnextv2_tiny.fcmae_ft_in22k_in1k', pretrained=True, num_classes=0, in_chans=1)
+        if config.USE_ft_convnext:
+            checkpoint = torch.load(f'./data/pretrain_convnext/ConvNext_finetuned_model_best_auroc.pth')
+            self.cnn.load_state_dict(checkpoint["model_state_dict"], strict=False)
         for param in self.cnn.parameters():
             param.requires_grad = False
         in_features = self.cnn(torch.randn(2, 1, config.IMG_SIZE, config.IMG_SIZE)).shape[1]
         
-        self.rnn = nn.GRU(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
+        self.rnn = nn.LSTM(input_size=in_features, hidden_size=config.RNN, batch_first= True, bidirectional=False)
         
         self.fc = nn.Linear(config.N_SLICES * config.RNN, config.FC, bias=True)
         self.classifier = nn.Linear(config.FC, num_classes, bias=True)        

@@ -1,4 +1,5 @@
 import torch
+import os
 
 class key():
     
@@ -18,12 +19,14 @@ class config():
     NUM_WORKERS = 0
     KFOLD= 5
 
-    WANDB = True
-    CHKPT = True
+    WANDB = False
+    CHKPT = False
     TRANSFORM = False
+    USE_ft_convnext = True
+    os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
     
 #mod = ['FLAIR', 'T1w', 'T1wCE', 'T2w']
-    MOD = 'T1w'
+    MOD = 'FLAIR'
     if MOD == 'FLAIR':
         N_SLICES = 250 #254
     elif MOD == 'T1wCE':
