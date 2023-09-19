@@ -5,10 +5,11 @@ import numpy as np
 
 import torch
 import torchvision.transforms as transforms
+from torchvision.transforms import v2
 from torch.utils.data import Dataset
 
 from utils import load_image
-
+from config import config
 
 
 
@@ -31,12 +32,23 @@ class RSNAdataset(Dataset):
         images=[load_image(path) for path in paths]
         org_size = len(images)
         
-        if self.transform:
-            seed = random.randint(0,99999)
-            for i in range(len(images)):
-                random.seed(seed)
-                images[i] = self.transform(image=images[i])["image"]
+        if config.ALBUMENTATION:
+            if self.transform:
+                seed = random.randint(0,99999)
+                for i in range(len(images)):
+                    random.seed(seed)
+                    images[i] = self.transform(image=images[i])["image"]
+
+                images = [torch.tensor(image, dtype=torch.float32) for image in images]
         
+        elif config.PYTORCH_TRANSFORM:
+            images = [torch.tensor(image, dtype=torch.float32) for image in images]
+            if self.transform:
+                seed = random.randint(0,99999)
+                for i in range(len(images)):
+                    random.seed(seed)
+                    images[i] = self.transform(images[i])
+       
         dup_len = self.n_slices - org_size
         if org_size == 0:
             dup = np.zeros((1, self.img_size, self.img_size))
@@ -45,9 +57,10 @@ class RSNAdataset(Dataset):
         for i in range(dup_len):
             images.append(dup)
 
-        images = [torch.tensor(image, dtype=torch.float32) for image in images]
+        if self.transform is None:
+            images = [torch.tensor(image, dtype=torch.float32) for image in images]
         images = torch.stack(images)     #[n_slices, C, H, W]
-
+       
         return images, org_size
     
     def __getitem__(self, index):
@@ -65,8 +78,15 @@ class RSNAdataset(Dataset):
 
         data.append(image)
         org.append(org_size)
-            
-        data = torch.stack(data).transpose(0,1)
+        
+        if self.transform:
+            if config.PYTORCH_TRANSFORM:
+                data = torch.stack(data).squeeze(0) #.transpose(0,1)
+            else:
+                data = torch.stack(data).transpose(0,1)
+        else:
+            data = torch.stack(data).transpose(0,1)
+        
         y = torch.tensor(self.targets[index])
         
         return {"X": data.float(), "y": y, 'org': org}

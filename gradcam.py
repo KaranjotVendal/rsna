@@ -1,238 +1,101 @@
-import numpy as np
-import cv2
-from PIL import Image
+import torch
 import torch.nn.functional as F
+from torchvision.transforms.functional import to_pil_image
+
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image, deprocess_image, preprocess_image
-
-from models import RACNet
-from config import config
-from utils import load_image
-
-def gradcam(images, test_loader, fold):
-    #images
-    model = RACNet(config.MODEL, config.NUM_CLASSES)
-    model.to(device)
-    checkpoint = torch.load(f'checkpoints/best-model-{fold}.pth')
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.eval()
-    # The target for the CAM is the Bear category.
-    # As usual for classication, the target is the logit output
-    # before softmax, for that category.
-    targets = [ClassifierOutputTarget(1)]
-    target_layers = [model.cnn.layer4[-1]]
-    
-    for idx, batch in enumerate(test_loader):
-   
-        with torch.no_grad():
-            features = batch['X'].to(config.DEVICE)
-            #targets = batch['y'].to(self.device)
-            org = batch['org']
-
-            #logits, probs = self.model(features, org)
-            #predicted_class = probs.argmax(dim=1)
-            #test_targets.append(targets)
-            #preds.append(probs.detach())
-
-            with GradCAM(model=model, target_layers=target_layers, use_cuda=True) as cam:
-                grayscale_cams = cam(input_tensor=features, targets=targets)
-                cam_image = show_cam_on_image(img, grayscale_cams[0, :], use_rgb=True)
-            cam = np.uint8(255*grayscale_cams[0, :])
-            cam = cv2.merge([cam, cam, cam])
-            images = np.hstack((np.uint8(255*img), cam , cam_image))
-            Image.fromarray(images)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# defines two global scope variables to store our gradients and activations
-gradients = None
-activations = None
-
-def backward_hook(module, grad_input, grad_output):
-  global gradients # refers to the variable in the global scope
-  print('Backward hook running...')
-  gradients = grad_output
-  # In this case, we expect it to be torch.Size([batch size, 1024, 8, 8])
-  print(f'Gradients size: {gradients[0].size()}') 
-  # We need the 0 index because the tensor containing the gradients comes
-  # inside a one element tuple.
-
-def forward_hook(module, args, output):
-  global activations # refers to the variable in the global scope
-  print('Forward hook running...')
-  activations = output
-  # In this case, we expect it to be torch.Size([batch size, 1024, 8, 8])
-  print(f'Activations size: {activations.size()}')
-
-
-model = RACNet(config.MODEL, config.NUM_CLASSES)
-checkpoint = torch.load(os.path.join(settings['MODEL_CHECKPOINT_DIR'], f'best-model-{fold}.pth'))
-model.load_state_dict(checkpoint["model_state_dict"])
-backward_hook = model.cnn.layer4[-1].register_full_backward_hook(backward_hook, prepend=False)
-forward_hook = model.cnn.layer4[-1]3.register_forward_hook(forward_hook, prepend=False)
-
-img = load_image('data/reduced_dataset/00002/FLAIR/Image-433.png')
-'./data/reduced_dataset/',
-                        xtrain,  
-                        ytrain,
-                        n_slices=254,
-                        img_size=112,
-                        transform=None
-                            
-
-
-
-
-def gradcam():
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import warnings
-warnings.filterwarnings('ignore')
-from torchvision import models
 import numpy as np
-import cv2
-import requests
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image, \
-    deprocess_image, \
-    preprocess_image
-from PIL import Image
+import PIL
 
-model = models.resnet50(pretrained=True)
-model.eval()
-image_url = "https://th.bing.com/th/id/R.94b33a074b9ceeb27b1c7fba0f66db74?rik=wN27mvigyFlXGg&riu=http%3a%2f%2fimages5.fanpop.com%2fimage%2fphotos%2f31400000%2fBear-Wallpaper-bears-31446777-1600-1200.jpg&ehk=oD0JPpRVTZZ6yizZtGQtnsBGK2pAap2xv3sU3A4bIMc%3d&risl=&pid=ImgRaw&r=0"
-img = np.array(Image.open(requests.get(image_url, stream=True).raw))
-img = cv2.resize(img, (224, 224))
-img = np.float32(img) / 255
-input_tensor = preprocess_image(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-# The target for the CAM is the Bear category.
-# As usual for classication, the target is the logit output
-# before softmax, for that category.
-targets = [ClassifierOutputTarget(295)]
-target_layers = [model.layer4]
-with GradCAM(model=model, target_layers=target_layers) as cam:
-    grayscale_cams = cam(input_tensor=input_tensor, targets=targets)
-    cam_image = show_cam_on_image(img, grayscale_cams[0, :], use_rgb=True)
-cam = np.uint8(255*grayscale_cams[0, :])
-cam = cv2.merge([cam, cam, cam])
-images = np.hstack((np.uint8(255*img), cam , cam_image))
-Image.fromarray(images)
+from config import config
 
 
-
-
-
-
-
-
-
-
-#=================================================================================
-'''gradcam implementation by chatgpt'''
-
-import cv2
-
-class GradCAM:
+class GradCAM():  
     def __init__(self, model, target_layer):
         self.model = model
         self.target_layer = target_layer
-        self.gradients = None
-        self.feature_maps = None
-        
-        # Hook the feature maps and gradients at the target layer
-        self.hooks = []
-        self.hooks.append(self.target_layer.register_forward_hook(self.save_feature_maps))
-        self.hooks.append(self.target_layer.register_backward_hook(self.save_gradients))
-    
-    def save_feature_maps(self, module, input, output):
-        """Function to hook the feature maps of the target layer"""
-        self.feature_maps = output.detach()
 
-    def save_gradients(self, module, grad_in, grad_out):
-        """Function to hook the gradients of the target layer"""
-        self.gradients = grad_out[0].detach()
-        
-    def compute_heatmap(self, input_tensor, class_idx=None):
-        """
-        Compute the Grad-CAM heatmap for a given input tensor and target class index.
-        
-        Args:
-        - input_tensor (torch.Tensor): The input tensor for the model. Shape (1, C, H, W)
-        - class_idx (int): The target class index. If None, use the predicted class.
-        
-        Returns:
-        - heatmap (numpy.ndarray): The computed Grad-CAM heatmap.
-        """
-        # Zero out the previous gradients and feature maps
-        self.feature_maps = None
+        # defines two global scope variables to store our gradients and activations
         self.gradients = None
+        self.activations = None
         
+        self.back_hook = self.target_layer.register_full_backward_hook(self.backward_hook)
+        self.frwd_hook = self.target_layer.register_forward_hook(self.forward_hook, prepend=False)
+        
+    def backward_hook(self, module, grad_input, grad_output):
+        print('Backward hook running...')
+        self.gradients = grad_output
+        # In this case, we expect it to be torch.Size([batch size, 1024, 8, 8])
+        print(f'Gradients size: {self.gradients[0].size()}') 
+        # We need the 0 index because the tensor containing the gradients comes
+        # inside a one element tuple.
+
+    def forward_hook(self, module, args, output):
+        print('Forward hook running...')
+        self.activations = output
+        # In this case, we expect it to be torch.Size([batch size, 1024, 8, 8])
+        print(f'Activations size: {self.activations.size()}')
+
+    def compute_cam(self, input_tensor, org, target_class=None):
         # Forward pass
-        logits = self.model(input_tensor)
+        logits, probs = self.model(input_tensor.to(config.DEVICE), org)
+        pred_idx = torch.argmax(logits, dim=1)
+
+        print('starting backward pass')
+        logits[:,pred_idx].backward()
+        print('finished the backward pass')
+
+        # pool the gradients across the channels
+        pooled_gradients = torch.mean(self.gradients[0], dim=[0, 2, 3])
+
+        # weight the channels by corresponding gradients
+        for i in range(self.activations.size()[1]):
+            self.activations[:, i, :, :] *= pooled_gradients[i]
+
+        # average the channels of the activations
+        heatmap = torch.mean(self.activations, dim=1).squeeze()
+
+        # relu on top of the heatmap
+        heatmap = F.relu(heatmap)
+
+        # normalize the heatmap
+        heatmap /= torch.max(heatmap)
+
+        # draw the heatmap
+        #plt.matshow(heatmap.detach())
+
+        #remove hooks
+        self.back_hook.remove()
+        self.frwd_hook.remove()
+
+        return heatmap
         
-        # If no class index provided, use the predicted class
-        if class_idx is None:
-            class_idx = torch.argmax(logits, dim=1).item()
-            
-        # Zero gradients
-        self.model.zero_grad()
-        
-        # Backward pass for the specific class index
-        logits[0, class_idx].backward(retain_graph=True)
-        
-        # Compute the weights as the mean of the gradients along the spatial dimensions
-        weights = torch.mean(self.gradients,
+    def show_result(self, input_tensor, heatmap):
+        # Create a figure and plot the first image
+        fig, ax = plt.subplots()
+        ax.axis('off') # removes the axis markers
+
+        # First plot the original image
+        ax.imshow(to_pil_image(input_tensor))
+
+        # Resize the heatmap to the same size as the input image and defines
+        # a resample algorithm for increasing image resolution
+        # we need heatmap.detach() because it can't be converted to numpy array while
+        # requiring gradients
+        overlay = to_pil_image(heatmap.detach(), mode='F').resize((256,256), resample=PIL.Image.BICUBIC)
+
+        # Apply any colormap you want
+        cmap = colormaps['jet']
+        overlay = (255 * cmap(np.asarray(overlay) ** 2)[:, :, :3]).astype(np.uint8)
+
+        # Plot the heatmap on the same axes, 
+        # but with alpha < 1 (this defines the transparency of the heatmap)
+        ax.imshow(overlay, alpha=0.2, interpolation='nearest')#, extent=extent)
+
+        # Show the plot
+        plt.show()
+        plt.savefig('./plots/GradCAM/gradcam_img_.png', dpi=300)
 
 
 
@@ -242,12 +105,141 @@ class GradCAM:
 
 
 
-#======================================================================================================================
 
 
-import torch.nn.functional as F
 
-class GradCAM:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#==============================================================================================================
+
+
+class GradCAM:  
     def __init__(self, model, target_layer):
         self.model = model
         self.target_layer = target_layer
@@ -265,12 +257,12 @@ class GradCAM:
     def save_gradient(self, module, grad_input, grad_output):
         self.gradients = grad_output[0]
 
-    def compute_cam(self, input_tensor, target_category=None):
+    def compute_cam(self, input_tensor, org, target_category=None):
         # Forward pass
-        model_output = self.model(input_tensor)
+        logit, probs = self.model(input_tensor, org)
         
         if target_category is None:
-            target_category = torch.argmax(model_output).item()
+            target_category = torch.argmax(probs).item()
 
         # Zero all other classes except target
         one_hot_output = torch.zeros_like(model_output)
@@ -308,13 +300,88 @@ class GradCAM:
 
 
 
+###################################################################################################################################################################
 
 
-
-
-
-
-
-
-
+def make_gradcam_heatmap(img_tensor, model, last_conv_layer_name, pred_index=None):
+    """
+    Generate class activation heatmap using PyTorch.
+    """
+    # Ensure the image tensor's gradients can be computed
+    img_tensor.requires_grad_(True)
     
+    # Fetch the last convolutional layer from the model by its name
+    last_conv_layer = dict(model.named_modules())[last_conv_layer_name]
+    
+    # Forward hook to fetch the output of the last convolutional layer
+    activations = []
+    def hook_fn(module, input, output):
+        activations.append(output)
+    hook = last_conv_layer.register_forward_hook(hook_fn)
+    
+    # Forward pass
+    preds = model(img_tensor)
+    
+    # If pred_index is not provided, take the index of the highest prediction
+    if pred_index is None:
+        pred_index = torch.argmax(preds[0]).item()
+    
+    # Only keep the prediction we're interested in for the gradient computation
+    target_class = preds[0][pred_index]
+    
+    # Backward pass
+    model.zero_grad()
+    target_class.backward()
+    
+    # Remove the hook after use
+    hook.remove()
+    
+    # Get the gradients and activations
+    grads = activations[0].grad[0]
+    activations = activations[0][0]
+
+    # Global average pooling of the gradients
+    pooled_grads = torch.mean(grads, dim=(1, 2))
+    
+    # Multiply each channel in the feature map array by 'how important this channel is'
+    # This gives the heatmap class activation
+    heatmap = torch.matmul(activations.permute(1, 2, 0), pooled_grads.unsqueeze(-1))
+    heatmap = heatmap.permute(2, 0, 1).squeeze(0)
+    
+    # Normalize between 0 and 1 and apply ReLU
+    heatmap = F.relu(heatmap)
+    heatmap /= torch.max(heatmap)
+    
+    return heatmap.detach().numpy()
+
+
+def get_resized_heatmap(heatmap, shape):
+    """Resize heatmap to shape"""
+    # Rescale heatmap to a range 0-255
+    upscaled_heatmap = np.uint8(255 * heatmap)
+
+    upscaled_heatmap = zoom(
+        upscaled_heatmap,
+        (
+            shape[0] / upscaled_heatmap.shape[0],
+            shape[1] / upscaled_heatmap.shape[1],
+            shape[2] / upscaled_heatmap.shape[2],
+        ),
+    )
+
+    return upscaled_heatmap
+
+
+resized_heatmap = get_resized_heatmap(heatmap, input_volume.shape)
+
+
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 20))
+
+# Convert PyTorch tensors to numpy arrays for visualization
+input_volume_np = input_volume.squeeze().numpy()
+
+ax[0].imshow(input_volume_np[:, :, 30], cmap='bone')
+img0 = ax[1].imshow(input_volume_np[:, :, 30], cmap='bone')
+img1 = ax[1].imshow(resized_heatmap[:, :, 30], cmap='jet', alpha=0.3, extent=img0.get_extent())
+plt.show()

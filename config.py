@@ -21,9 +21,11 @@ class config():
 
     WANDB = False
     CHKPT = False
-    TRANSFORM = False
-    USE_ft_convnext = True
-    os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
+    #TRANSFORM = False
+    PYTORCH_TRANSFORM = False
+    ALBUMENTATION = False
+    USE_ft_convnext = False
+    #os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
     
 #mod = ['FLAIR', 'T1w', 'T1wCE', 'T2w']
     MOD = 'FLAIR'

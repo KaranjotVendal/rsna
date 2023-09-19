@@ -164,5 +164,6 @@ plots/
 /wandb
 
 Untitled.ipynb
-gradcam.py
 prepdataset.ipynb
+rough.py
+experiment 2.0/

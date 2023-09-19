@@ -6,6 +6,8 @@ import json
 import torch
 from torch.utils.data import DataLoader
 from torch.nn import functional as F
+from torchvision.transforms import v2
+import torchvision.transforms as transforms
 from sklearn.model_selection import StratifiedKFold
 
 import albumentations as A
@@ -44,11 +46,19 @@ def train():
         
     Y = np.delete(Y,dlt)
 
-    if config.TRANSFORM:
+    if config.ALBUMENTATION:
         train_transform = A.Compose([
                                     #A.HorizontalFlip(p=0.5),
                                     A.Rotate(limit=10, p=0.5)
                                 ])
+    elif config.PYTORCH_TRANSFORM:
+        train_transform = transforms.Compose([
+
+                            transforms.ToPILImage(),
+                            #v2.MixUp(alpha= 0.1,num_classes=config.NUM_CLASSES),
+                            transforms.AutoAugment(),
+                            transforms.ToTensor()
+                        ])
     else:
         train_transform = None
 
