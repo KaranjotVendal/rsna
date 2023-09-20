@@ -137,7 +137,7 @@ def ensemble_prediction(models, test_loader, approach='majority_voting'):
         elif approach == 'sum_of_probabilities':
             final_prediction = sum_of_probabilities(list(i))
 
-    all_predictions.append(final_prediction)
+        all_predictions.append(final_prediction)
         
     return np.concatenate(all_predictions), all_true_labels
 
